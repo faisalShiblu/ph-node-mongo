@@ -13,9 +13,75 @@
     <form action="/addProduct" method="post">
         <input type="text" name="name" placeholder="Product Name" />
         <input type="text" name="price" placeholder="Product Price" />
-        <input type="text" name="qunatity" placeholder="Product Quantity" />
+        <input type="text" name="quantity" placeholder="Product Quantity" />
         <button type="submit">Add Product</button>
     </form>
+    <div id="prods">
+    </div>
+    <div id="update">
+    </div>
+    <script>
+        function loadProducts() {
+            fetch('/products').then(res => res.json()).then(result => {
+                // console.log(result);
+                const container = document.getElementById('prods');
+                const update = document.getElementById('update');
+                container.innerHTML = '';
+                update.innerHTML = '';
+                result.forEach(element => {
+                    const p = document.createElement('p');
+                    p.innerHTML = `<strong> name : ${element.name} ; </strong> -- price : ${element.price} ; quantity : ${element.quantity} ;
+                        <button onclick="loadProd('${element._id}')">update</button>
+                        <button onclick="delProd(event,'${element._id}')">del it</button>
+                    `;
+                    container.appendChild(p);
+                });
+            });
+        }
+        loadProducts();
+
+        function loadProd(id) {
+            fetch(`/product/${id}`).then(res => res.json())
+                .then(result => {
+                    const p = document.getElementById('update');
+                    p.innerHTML = `
+                    <h3>Update : ${result._id}</h3>
+                    price : <input type="text" id="price" value="${result.price}" />
+                    <br />
+                    quantity :  <input type="text" id="quantity" value="${result.quantity}" />
+                    <br />
+                    <button onclick="updateProd('${result._id}')">submit</button>
+                    `;
+                });
+        }
+
+        function updateProd(id) {
+            const price = document.getElementById('price').value;
+            const quantity = document.getElementById('quantity').value;
+            const product = { id, price, quantity };
+            fetch(`/update/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(product)
+            }).then(res => res.json())
+                .then(result => {
+                    loadProducts();
+                    document.getElementById('update').innerHTML = '';
+                });
+        }
+
+        function delProd(event, id) {
+            fetch(`/delete/${id}`, {
+                method: 'DELETE'
+            }).then(res => res.json())
+                .then(result => {
+                    if (result) {
+                        event.target.parentNode.style.display = 'none';
+                    }
+                });
+        }
+    </script>
+
 </body>
 
 </html>
